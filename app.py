@@ -1,10 +1,50 @@
 import streamlit as st
-from utils import extract_text, split_into_clauses
-from risk_rules import assess_risk
+import PyPDF2
+from docx import Document
 
+# Page config
 st.set_page_config(page_title="Contract Risk Bot", layout="wide")
 
 st.title("📄 Contract Analysis & Risk Assessment Bot")
+
+# --------- Helper Functions ---------
+
+def extract_text(file):
+    if file.name.endswith(".txt"):
+        return file.read().decode("utf-8")
+
+    if file.name.endswith(".docx"):
+        doc = Document(file)
+        return "\n".join(p.text for p in doc.paragraphs)
+
+    if file.name.endswith(".pdf"):
+        reader = PyPDF2.PdfReader(file)
+        return "\n".join(page.extract_text() for page in reader.pages)
+
+    return ""
+
+
+def split_into_clauses(text):
+    clauses = []
+    for line in text.split("\n"):
+        if len(line.strip()) > 40:
+            clauses.append(line.strip())
+    return clauses
+
+
+def assess_risk(clause):
+    clause = clause.lower()
+
+    if any(word in clause for word in ["penalty", "terminate immediately", "indemnify", "liability"]):
+        return "HIGH", "Contains penalty, indemnity, or termination risk"
+
+    if any(word in clause for word in ["arbitration", "jurisdiction", "governing law"]):
+        return "MEDIUM", "Legal jurisdiction or arbitration clause"
+
+    return "LOW", "Standard clause"
+
+
+# --------- App Logic ---------
 
 uploaded_file = st.file_uploader("Upload Contract (PDF / DOCX / TXT)")
 
@@ -44,4 +84,3 @@ elif medium_risk > 2:
     st.warning("Overall Risk: MEDIUM")
 else:
     st.success("Overall Risk: LOW")
-
