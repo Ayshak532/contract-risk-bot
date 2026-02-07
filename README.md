@@ -48,7 +48,7 @@ https://contract-risk-bot-offy9fc9pug7rzzjecbrhf.streamlit.app/
 
 ## Demo Video
 🎥 Project Walkthrough (Google Drive):
-https://drive.google.com/file/d/1gCY-ht93i98RVZVjvJMYj33WPb6AVP9V/view?usp=drive_link
+https://drive.google.com/file/d/1gcY-ht93i98RvyzwjOMYjJ3WPb6AVPY9/view?usp=drive_link
 
 ---
 
