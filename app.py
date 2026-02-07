@@ -16,6 +16,9 @@ if "analysis_done" not in st.session_state:
 if "results" not in st.session_state:
     st.session_state.results = []
 
+if "last_file" not in st.session_state:
+    st.session_state.last_file = None
+
 st.title("📄 Contract Analysis & Risk Assessment Bot")
 
 # --------------------------------------------------
@@ -31,18 +34,17 @@ def extract_text(file):
 
     if file.name.endswith(".pdf"):
         reader = PyPDF2.PdfReader(file)
-        return "\n".join(page.extract_text() for page in reader.pages if page.extract_text())
+        return "\n".join(
+            page.extract_text()
+            for page in reader.pages
+            if page.extract_text()
+        )
 
     return ""
 
 
 def split_into_clauses(text):
-    clauses = []
-    for line in text.split("\n"):
-        line = line.strip()
-        if len(line) > 40:
-            clauses.append(line)
-    return clauses
+    return [line.strip() for line in text.split("\n") if len(line.strip()) > 40]
 
 
 def assess_risk(clause):
@@ -58,25 +60,33 @@ def assess_risk(clause):
 
 
 # --------------------------------------------------
-# App Logic
+# File Upload
 # --------------------------------------------------
-uploaded_file = st.file_uploader("Upload Contract (PDF / DOCX / TXT)", type=["pdf", "docx", "txt"])
+uploaded_file = st.file_uploader(
+    "Upload Contract (PDF / DOCX / TXT)",
+    type=["pdf", "docx", "txt"]
+)
 
-# Reset analysis when new file is uploaded
-if uploaded_file:
+# --------------------------------------------------
+# Reset ONLY when a NEW file is uploaded
+# --------------------------------------------------
+if uploaded_file and uploaded_file.name != st.session_state.last_file:
     st.session_state.analysis_done = False
     st.session_state.results = []
+    st.session_state.last_file = uploaded_file.name
 
-# Load text
+# --------------------------------------------------
+# Load Contract Text
+# --------------------------------------------------
 if uploaded_file:
     text = extract_text(uploaded_file)
 else:
-    with open("sample_contract.txt") as f:
+    with open("sample_contract.txt", encoding="utf-8") as f:
         text = f.read()
     st.info("Using sample contract for demo")
 
 # --------------------------------------------------
-# Run analysis ONLY ONCE
+# Run Analysis ONCE
 # --------------------------------------------------
 if not st.session_state.analysis_done:
     clauses = split_into_clauses(text)
@@ -96,26 +106,23 @@ high_risk = 0
 medium_risk = 0
 
 for clause, risk, reason in st.session_state.results:
-
     if risk == "HIGH":
         high_risk += 1
         st.error(f"⚠️ **HIGH RISK**: {reason}\n\n{clause}")
-
     elif risk == "MEDIUM":
         medium_risk += 1
         st.warning(f"⚠️ **MEDIUM RISK**: {reason}\n\n{clause}")
-
     else:
         st.success(f"✅ **LOW RISK**\n\n{clause}")
 
 # --------------------------------------------------
-# Overall Contract Risk (CORRECT LOGIC)
+# Overall Contract Risk (FINAL & CORRECT)
 # --------------------------------------------------
 st.subheader("📊 Overall Contract Risk")
 
-if high_risk > 0:
+if high_risk >= 1:
     st.error("Overall Risk: HIGH")
-elif medium_risk > 0:
+elif medium_risk >= 1:
     st.warning("Overall Risk: MEDIUM")
 else:
     st.success("Overall Risk: LOW")
