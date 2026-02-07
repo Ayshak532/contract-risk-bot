@@ -2,6 +2,13 @@ import streamlit as st
 import PyPDF2
 from docx import Document
 
+# -------- Session State Initialization --------
+if "analysis_done" not in st.session_state:
+    st.session_state.analysis_done = False
+
+if "results" not in st.session_state:
+    st.session_state.results = []
+
 # Page config
 st.set_page_config(page_title="Contract Risk Bot", layout="wide")
 
